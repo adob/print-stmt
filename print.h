@@ -156,6 +156,6 @@ struct Print
 };
 }
 
-#define print awesome::Print(stdout)*
-#define warn awesome::Print(stderr)*
+#define print (::awesome::Print(stdout))*
+#define warn  (::awesome::Print(stderr))*
 
