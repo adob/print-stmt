@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 
 #include "print.h"
 
@@ -42,6 +43,17 @@ int main() {
     clear_file();
     awesome::Print(file) * "hello %o" % 3;
     TEST("hello 3\n");
+    
+    
+    {
+        clear_file();
+        std::string str = "This is a std::string.";
+        
+        awesome::Print(file) * "hello from <%o>" % str;
+        
+        
+        TEST("hello from <This is a std::string.>\n");
+    }
 }
 
 

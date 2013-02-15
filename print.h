@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+//#include <type_traits>
 
 namespace awesome {
 
@@ -26,6 +27,24 @@ inline void Write(FILE *file, unsigned char c) {
 inline void Write(FILE *file, bool b) {
     fputs(b ? "true" : "false", file);
 }
+
+template <typename ReturnType, typename T, typename ExpectedType, ExpectedType > 
+struct enable { 
+    typedef ReturnType type; 
+};
+
+template <typename STRING>
+typename enable<void, STRING, const char* (STRING::*) () const, &STRING::c_str >::type
+Write(FILE *file, STRING const& str) 
+{
+    fputs(str.c_str(), file);
+}
+
+// template <typename STRING>
+// typename std::enable_if< std::is_member_function_pointer< decltype(&STRING::c_str) >::value, void>::type
+// inline void Write(FILE *file, STRING s) {
+//     fputs(STRING.c_str(), file);
+// }
 
 struct PrintFormatted
 {
