@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <string>
 //#include <type_traits>
 
 namespace awesome {
@@ -28,23 +29,83 @@ inline void Write(FILE *file, bool b) {
     fputs(b ? "true" : "false", file);
 }
 
-template <typename ReturnType, typename T, typename ExpectedType, ExpectedType > 
-struct enable { 
+template < typename ReturnType, typename ExpectedType, ExpectedType > 
+struct EnableIf { 
     typedef ReturnType type; 
 };
 
-template <typename STRING>
-typename enable<void, STRING, const char* (STRING::*) () const, &STRING::c_str >::type
-Write(FILE *file, STRING const& str) 
+struct Yes { char a; };
+struct No  { char a; char b; };
+
+template <typename T, const char * (T::*) () const>
+struct TryCStr {
+    typedef T* type;
+    
+};
+
+template <typename T>
+Yes
+test_cstr( typename TryCStr<T, &T::c_str>::type t = 0);
+
+template <typename T>
+No
+test_cstr( ... );
+
+
+template < int >
+struct Test {
+    
+};
+
+template <>
+struct Test<1> {
+    typedef int Yes;
+};
+
+template <>
+struct Test<2> {
+    typedef int No;
+};
+
+
+template < typename ReturnType, typename ExpectedType1, ExpectedType1,
+          /*typename ExpectedType2, ExpectedType2 */
+          typename T2> 
+struct EnableIf2 { 
+    typedef ReturnType type; 
+};
+
+template <typename Iterable>
+typename EnableIf2< void, typename Iterable::const_iterator (Iterable::*) () const, &Iterable::begin,
+                          typename Test<  sizeof ( test_cstr<Iterable>( 0 ) )  >::No
+                  >::type
+Write(FILE *file, Iterable const& iterable) 
 {
-    fputs(str.c_str(), file);
+    typename Iterable::const_iterator it = iterable.begin();
+    
+    fputc('[', file);
+    
+    if (it != iterable.end()) {
+        Write(file, *it);
+        ++it;
+        
+        while (it != iterable.end()) {
+            fputc(',', file);
+            fputc(' ', file);
+            
+            Write(file, *it);
+            ++it;
+        }
+    }
+    
+    fputc(']', file);
 }
 
-// template <typename STRING>
-// typename std::enable_if< std::is_member_function_pointer< decltype(&STRING::c_str) >::value, void>::type
-// inline void Write(FILE *file, STRING s) {
-//     fputs(STRING.c_str(), file);
-// }
+template <typename STRING>
+typename EnableIf<void, const char* (STRING::*) () const, &STRING::c_str >::type
+Write(FILE *file, STRING const& s) {
+    fputs(s.c_str(), file);
+}
 
 struct PrintFormatted
 {

@@ -2,9 +2,16 @@
 #include <stdint.h>
 #include "print.h"
 
+#include <string>
+#include <vector>
+#include <type_traits>
+
+
 int main() {
-    print "Hello, world";
-    print "one", "two", "three";
-    print "time now:", time(NULL);
-    print "Print: 1=%o 2=%o 3=%o" % 'a', "Alex", 65;
+    
+    std::string str = "Hello World";
+    std::vector<int> vec = {23, 44, 645};
+    
+    print "str:", str;
+    print "vec:", vec;
 }
