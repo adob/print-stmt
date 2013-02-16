@@ -34,6 +34,12 @@ struct EnableIf {
     typedef ReturnType type; 
 };
 
+template <typename STRING>
+typename EnableIf<void, const char* (STRING::*) () const, &STRING::c_str >::type
+Write(FILE *file, STRING const& s) {
+    fputs(s.c_str(), file);
+}
+
 struct Yes { char a; };
 struct No  { char a; char b; };
 
@@ -75,6 +81,7 @@ struct EnableIf2 {
     typedef ReturnType type; 
 };
 
+
 template <typename Iterable>
 typename EnableIf2< void, typename Iterable::const_iterator (Iterable::*) () const, &Iterable::begin,
                           typename Test<  sizeof ( test_cstr<Iterable>( 0 ) )  >::No
@@ -92,19 +99,13 @@ Write(FILE *file, Iterable const& iterable)
         while (it != iterable.end()) {
             fputc(',', file);
             fputc(' ', file);
-            
+                
             Write(file, *it);
             ++it;
         }
     }
     
     fputc(']', file);
-}
-
-template <typename STRING>
-typename EnableIf<void, const char* (STRING::*) () const, &STRING::c_str >::type
-Write(FILE *file, STRING const& s) {
-    fputs(s.c_str(), file);
 }
 
 struct PrintFormatted
@@ -141,7 +142,7 @@ struct PrintFormatted
     }
     
     template <typename T>
-    PrintFormatted& operator , (T t)
+    PrintFormatted& operator , (T const& t)
     {
         Write(file, t);
         do_print();
@@ -196,7 +197,7 @@ struct PrintUndecided
     }
     
     template <typename T>
-    PrintUnformatted operator , (T t)
+    PrintUnformatted operator , (T const& t)
     {
         fputs(str, file);
         fputc(' ', file);

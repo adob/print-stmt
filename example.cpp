@@ -14,4 +14,11 @@ int main() {
     
     print "str:", str;
     print "vec:", vec;
+    
+    const std::string conststr = "Hello";
+    print "conststr:", conststr;
+//     
+     std::vector<std::string> strings = { "one", "two", "three" };
+//     
+     print "strings:", strings;
 }
