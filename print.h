@@ -3,7 +3,7 @@
 #include <string>
 //#include <type_traits>
 
-namespace awesome {
+namespace pretty {
 
 inline void Write(FILE *file, const char *str) {
     fputs(str, file);
@@ -29,13 +29,17 @@ inline void Write(FILE *file, bool b) {
     fputs(b ? "true" : "false", file);
 }
 
-template < typename ReturnType, typename ExpectedType, ExpectedType > 
-struct EnableIf { 
+template < typename ReturnType, int > 
+struct EnableIf1 { 
     typedef ReturnType type; 
 };
 
 template <typename STRING>
-typename EnableIf<void, const char* (STRING::*) () const, &STRING::c_str >::type
+typename EnableIf1<void, 
+    sizeof (
+        (const char* (STRING::*) () const) &STRING::c_str 
+    )
+>::type
 Write(FILE *file, STRING const& s) {
     fputs(s.c_str(), file);
 }
@@ -74,8 +78,7 @@ struct Test<2> {
 };
 
 
-template < typename ReturnType, typename ExpectedType1, ExpectedType1,
-          /*typename ExpectedType2, ExpectedType2 */
+template < typename ReturnType, int,
           typename T2> 
 struct EnableIf2 { 
     typedef ReturnType type; 
@@ -83,9 +86,14 @@ struct EnableIf2 {
 
 
 template <typename Iterable>
-typename EnableIf2< void, typename Iterable::const_iterator (Iterable::*) () const, &Iterable::begin,
-                          typename Test<  sizeof ( test_cstr<Iterable>( 0 ) )  >::No
-                  >::type
+typename EnableIf2< void, 
+    sizeof( 
+        (typename Iterable::const_iterator (Iterable::*) () const)
+            &Iterable::begin 
+    ),
+    
+    typename Test<  sizeof ( test_cstr<Iterable>( 0 ) )  >::No
+>::type
 Write(FILE *file, Iterable const& iterable) 
 {
     typename Iterable::const_iterator it = iterable.begin();
@@ -237,6 +245,6 @@ struct Print
 };
 }
 
-#define print (::awesome::Print(stdout))*
-#define warn  (::awesome::Print(stderr))*
+#define print (::pretty::Print(stdout))*
+#define warn  (::pretty::Print(stderr))*
 

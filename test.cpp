@@ -8,7 +8,7 @@
 
 
 
-using namespace awesome;
+using namespace pretty;
 
 char buf[1024 * 64];
 FILE *file;
@@ -27,23 +27,23 @@ int main() {
     TEST("hello\n");
     
     clear_file();
-    awesome::Print(file) * "hello";
+    pretty::Print(file) * "hello";
     TEST("hello\n");
     
     clear_file();
-    awesome::Print(file) * "hello", "one";
+    pretty::Print(file) * "hello", "one";
     TEST("hello one\n");
     
     clear_file();
-    awesome::Print(file) * "hello", "one", "two";
+    pretty::Print(file) * "hello", "one", "two";
     TEST("hello one two\n");
     
     clear_file();
-    awesome::Print(file) * "";
+    pretty::Print(file) * "";
     TEST("\n");
     
     clear_file();
-    awesome::Print(file) * "hello %o" % 3;
+    pretty::Print(file) * "hello %o" % 3;
     TEST("hello 3\n");
     
     
@@ -51,7 +51,7 @@ int main() {
         clear_file();
         std::string str = "This is a std::string.";
         
-        awesome::Print(file) * "hello from <%o>" % str;
+        pretty::Print(file) * "hello from <%o>" % str;
         
         
         TEST("hello from <This is a std::string.>\n");
