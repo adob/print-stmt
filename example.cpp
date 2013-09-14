@@ -15,7 +15,7 @@ struct TestInt {
 };
 
 template <typename T>
-typename TestInt<void, sizeof ( (typename T::const_iterator (T::*) () const ) &T::begin ) >::type
+typename TestInt<void, 3>::type
 Foo() {
     
 }
@@ -36,6 +36,7 @@ int main() {
     std::string str = "Hello World";
     std::vector<int> vec = {23, 44, 645};
     
+    
     print "str:", str;
     print "vec:", vec;
     
@@ -49,5 +50,7 @@ int main() {
     std::unordered_set<std::string> files = { "file1", "file2", "file3" };
     
     print "files:", files;
+    
+    print "abc %o %o %o def" % 1, 2, 3;
     
 }
