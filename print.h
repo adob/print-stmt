@@ -1,48 +1,202 @@
 #pragma once
 #include <stdio.h>
-#include <string>
-//#include <type_traits>
+
+namespace std {
+    template <typename T1, typename T2>
+    struct pair;
+    
+    template <typename Key, typename T, typename Compare, typename Allocator>
+    struct map;
+    
+    template<class Key, class T, class Hash, class KeyEqual, class Allocator> 
+    struct unordered_map;
+}
 
 namespace pretty {
 
-inline void Write(FILE *file, const char *str) {
-    fputs(str, file);
+inline void Write(FILE *file, const char *str, bool quoted) {
+    if (!quoted) 
+    {
+        fputs_unlocked(str, file);
+    }
+    else 
+    {
+        putc_unlocked('"', file);
+        while (*str != '\0') {
+            switch (*str) {
+                case '\r':
+                    fputs_unlocked("\\r", file); break;
+                case '\n':
+                    fputs_unlocked("\\n", file); break;
+                case '\t':
+                    fputs_unlocked("\\t", file); break;
+                case '\\':
+                    fputs_unlocked("\\\\", file); break;
+                case '"':
+                    fputs_unlocked("\\\"", file); break;
+                default:
+                    putc_unlocked(*str, file);
+            }
+            
+            str++;
+        }
+        putc_unlocked('"', file);
+    }
 }
 
-inline void Write(FILE *file, int num) {
-    fprintf(file, "%d", num);
+inline void Write(FILE *file, int num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%d", num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
 }
 
-inline void Write(FILE *file, long num) {
-    fprintf(file, "%ld", num);
+inline void Write(FILE *file, long num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%ld", num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
 }
 
-inline void Write(FILE *file, char c) {
-    fprintf(file, "%c", c);
+inline void Write(FILE *file, char c, bool quoted) {
+    if (!quoted)
+        putc_unlocked(c, file);
+    else {
+        putc_unlocked('\'', file);
+        
+        switch (c) {
+            case '\r':
+                fputs_unlocked("\\r", file); break;
+            case '\n':
+                fputs_unlocked("\\n", file); break;
+            case '\t':
+                fputs_unlocked("\\t", file); break;
+            case '\\':
+                fputs_unlocked("\\\\", file); break;
+            case '\'':
+                fputs_unlocked("\\\'", file); break;
+            default:
+                putc_unlocked(c, file);
+        }
+        putc_unlocked('\'', file);
+        
+    }
 }
 
-inline void Write(FILE *file, unsigned char c) {
-    fprintf(file, "%d", c);
+inline void Write(FILE *file, unsigned char c, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%d", c);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
 }
 
-inline void Write(FILE *file, bool b) {
-    fputs(b ? "true" : "false", file);
+inline void Write(FILE *file, bool b, bool) {
+    fputs_unlocked(b ? "true" : "false", file);
 }
 
 template < typename ReturnType, int > 
-struct EnableIf1 { 
+struct EnableIfInt { 
     typedef ReturnType type; 
 };
 
 template <typename STRING>
-typename EnableIf1<void, 
+typename EnableIfInt<void, 
     sizeof (
         (const char* (STRING::*) () const) &STRING::c_str 
     )
 >::type
-Write(FILE *file, STRING const& s) {
-    fputs(s.c_str(), file);
+Write(FILE *file, STRING const& s, bool quoted) {
+    Write(file, s.c_str(), quoted);
 }
+
+
+#ifdef QSTRING_H
+void Write(FILE *file, QString const& str, bool quoted) 
+{
+    Write(file, str.toLocal8Bit().constData(), quoted);
+}
+
+#endif
+
+#ifdef QHASH_H
+template <typename Key, typename T>
+void Write(FILE *file, QHash<Key, T> const& map, bool quoted)
+{
+    const QList<Key> keys = map.keys();
+    
+    fputs_unlocked("{ ", file);
+    
+    typename QList<Key>::const_iterator it = keys.begin();
+    
+    if (it != keys.end()) {
+        Write(file, *it, quoted);
+        fputs_unlocked(": ", file);
+        Write(file, map[*it], quoted);
+        
+        ++it;
+        
+        while (it != keys.end()) {
+            fputs_unlocked(", ", file);
+            
+            Write(file, *it, quoted);
+            fputs_unlocked(": ", file);
+            Write(file, map[*it], quoted);
+            ++it;
+        }
+    }
+    
+    fputs_unlocked(" }", file);
+}
+#endif
+
+#ifdef QMAP_H
+template <typename Key, typename T>
+void Write(FILE *file, QMap<Key, T> const& map, bool quoted)
+{
+    const QList<Key> keys = map.keys();
+    
+    fputs_unlocked("{ ", file);
+    
+    typename QList<Key>::const_iterator it = keys.begin();
+    
+    if (it != keys.end()) {
+        Write(file, *it, quoted);
+        fputs_unlocked(": ", file);
+        Write(file, map[*it], quoted);
+        
+        ++it;
+        
+        while (it != keys.end()) {
+            fputs_unlocked(", ", file);
+            
+            Write(file, *it, quoted);
+            fputs_unlocked(": ", file);
+            Write(file, map[*it], quoted);
+            ++it;
+        }
+    }
+    
+    fputs_unlocked(" }", file);
+}
+#endif
+
+template < typename ReturnType, typename T > 
+struct EnableIfType { 
+    typedef ReturnType type; 
+};
+
+
+template <typename T1, typename T2 >
+void
+Write(FILE *file, std::pair<T1, T2> const& pair, bool quoted)
+{
+    putc_unlocked('(', file);
+    Write(file, pair.first, quoted);
+    fputs_unlocked(", ", file);
+    Write(file, pair.second, quoted);
+    putc_unlocked(')', file);
+}
+
 
 struct Yes { char a; };
 struct No  { char a; char b; };
@@ -94,27 +248,86 @@ typename EnableIf2< void,
     
     typename Test<  sizeof ( test_cstr<Iterable>( 0 ) )  >::No
 >::type
-Write(FILE *file, Iterable const& iterable) 
+Write(FILE *file, Iterable const& iterable, bool quoted) 
 {
     typename Iterable::const_iterator it = iterable.begin();
     
-    fputc('[', file);
+    putc_unlocked('[', file);
     
     if (it != iterable.end()) {
-        Write(file, *it);
+        Write(file, *it, quoted);
         ++it;
         
         while (it != iterable.end()) {
-            fputc(',', file);
-            fputc(' ', file);
+            fputs_unlocked(", ", file);
                 
-            Write(file, *it);
+            Write(file, *it, quoted);
             ++it;
         }
     }
     
-    fputc(']', file);
+    putc_unlocked(']', file);
 }
+
+
+template <typename T>
+void
+WriteMap_Pairs(FILE *file, T const& map, bool quoted)
+{
+    typename T::const_iterator it = map.begin();
+    
+    fputs_unlocked("{ ", file);
+    
+    if (it != map.end()) {
+        Write(file, it->first, quoted);
+        fputs_unlocked(": ", file);
+        Write(file, it->second, quoted);
+        
+        ++it;
+        
+        while (it != map.end()) {
+            fputs_unlocked(", ", file);
+            
+            Write(file, it->first, quoted);
+            fputs_unlocked(": ", file);
+            Write(file, it->second, quoted);
+            ++it;
+        }
+    }
+    
+    fputs_unlocked(" }", file);
+}
+
+template <typename Key, typename T, typename Compare, typename Allocator>
+void
+Write(FILE *file, ::std::map<Key, T, Compare, Allocator> const& map, bool quoted)
+{
+    WriteMap_Pairs(file, map, quoted);
+}
+
+template <class Key, class T, class Hash, class KeyEqual, class Allocator>
+void
+Write(FILE *file, ::std::unordered_map<Key, T, Hash, KeyEqual, Allocator> const& map,
+      bool quoted)
+{
+    WriteMap_Pairs(file, map, quoted);
+}
+
+// template <typename T>
+// T&
+// DeclVal();
+// 
+// 
+// // template <typename T>
+// // typename EnableIfInt<void, 
+// //     sizeof (
+// //         &( DeclVal<QDataStream>() << DeclVal<T>() )
+// //    )>::type
+// // Write(FILE *, T & )
+// // {
+// //     //
+// // }
+
 
 struct PrintFormatted
 {
@@ -124,6 +337,7 @@ struct PrintFormatted
     
     PrintFormatted(FILE *f, const char *s) : file(f), str(s)
     {
+        //puts("created PrintFormatted");
         do_print();
     }
     
@@ -138,30 +352,32 @@ struct PrintFormatted
                 goto done;
             }
             
-            fputc(*str, file);
+            putc_unlocked(*str, file);
             
             str++;
         }
         
-        fputc('\n', file);
+        putc_unlocked('\n', file);
         percent = 0;
         
         done: ;
     }
     
-    template <typename T>
+        template <typename T>
     PrintFormatted& operator , (T const& t)
     {
-        Write(file, t);
+        bool quoted = (percent[1] == 'q');
+        Write(file, t, quoted);
         do_print();
         return *this;
     }
     
     ~PrintFormatted() 
     {
+        //puts("destoryed PrintFormatted");
         if (percent) {
-            fputs(percent, file);
-            fputc('\n', file);
+            fputs_unlocked(percent, file);
+            putc_unlocked('\n', file);
         }
     }
  
@@ -172,18 +388,21 @@ struct PrintUnformatted
 {
     FILE *file;
     
-    PrintUnformatted(FILE *f) : file(f) {}
+    PrintUnformatted(FILE *f) : file(f) { 
+        //puts("created PrintUnformatted"); 
+    }
     
     template <typename T>
     PrintUnformatted& operator , (T t)
     {
-        fputc(' ', file);
-        Write(file, t);
+        putc_unlocked(' ', file);
+        Write(file, t, false);
         return *this;
     }
     
-    ~PrintUnformatted() { 
-        fputc('\n', file);
+    ~PrintUnformatted() {
+        //puts("destoryed PrintUnformatted");
+        putc_unlocked('\n', file);
     }
     
 };
@@ -193,7 +412,10 @@ struct PrintUndecided
     FILE *file;
     const char *str;
     
-    PrintUndecided(FILE *f, const char *s) : file(f), str(s) {}
+    PrintUndecided(FILE *f, const char *s) : file(f), str(s) 
+    { 
+        //puts("created PrintUndecided"); 
+    }
     
     template <typename T>
     PrintFormatted operator % (T t)
@@ -207,17 +429,18 @@ struct PrintUndecided
     template <typename T>
     PrintUnformatted operator , (T const& t)
     {
-        fputs(str, file);
-        fputc(' ', file);
-        Write(file, t);
+        fputs_unlocked(str, file);
+        putc_unlocked(' ', file);
+        Write(file, t, false);
         str = 0;
         return PrintUnformatted(file);
     }
     
-    ~PrintUndecided() { 
+    ~PrintUndecided() {
+        //puts("destoryed PrintUndecided");
         if (str != 0) {
-            Write(file, str);
-            fputc('\n', file);
+            fputs_unlocked(str, file);
+            putc_unlocked('\n', file);
         }
         
     }
@@ -227,19 +450,27 @@ struct Print
 {        
     FILE *file;
     
-    Print()        : file(stdin) {}
-    Print(FILE *f) : file(f)     {}
+    Print(FILE *f = stdout) : file(f)
+    { 
+        //puts("created Print"); 
+        flockfile(f);
+    }
     
     template <typename T>
     PrintUnformatted operator * (T const& t) 
     {
-        Write(file, t);
+        Write(file, t, false);
         return PrintUnformatted(file);
     }
     
     PrintUndecided operator * (const char *str) 
     {
         return PrintUndecided(file, str);
+    }
+    
+    ~Print() {
+        //puts("destoryed Print");
+        funlockfile(stdout);
     }
 
 };
