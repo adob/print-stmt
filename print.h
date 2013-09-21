@@ -71,9 +71,23 @@ inline void Write(FILE *file, int num, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
+inline void Write(FILE *file, unsigned int num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%u", num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+
 inline void Write(FILE *file, long num, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%ld", num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+
+inline void Write(FILE *file, unsigned long num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%lu", num);
     
     fwrite_unlocked(buf, 1, cnt, file);
 }
