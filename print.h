@@ -92,6 +92,13 @@ inline void Write(FILE *file, unsigned long num, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
+inline void Write(FILE *file, void *p, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%p", p);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+
 inline void Write(FILE *file, char c, bool quoted) {
     if (!quoted)
         putc_unlocked(c, file);
