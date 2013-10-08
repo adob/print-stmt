@@ -3,6 +3,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <stdint.h>
 
 #include "print.h"
 
@@ -46,6 +47,43 @@ int main() {
     pretty::Print(file) * "hello %o" % 3;
     TEST("hello 3\n");
     
+    {
+        clear_file();
+        char tmp[100];
+        sprintf(tmp, "p = %p\n", file);
+        pretty::Print(file) * "p =", file; 
+        TEST(tmp);
+    }
+    
+    {
+        clear_file();
+        char c = 'c';
+        pretty::Print(file) * c; 
+        TEST("c\n");
+    }
+    
+    {
+        clear_file();
+        uint8_t v = 224;
+        pretty::Print(file) * v; 
+        TEST("224\n");
+    }
+    
+    {
+        clear_file();
+        int8_t v = -50;
+        pretty::Print(file) * v; 
+        TEST("-50\n");
+    }
+    
+    clear_file();
+    pretty::Print(file) * 2.27; 
+    TEST("2.27\n");
+    
+    clear_file();
+    pretty::Print(file) * 2.27f; 
+    TEST("2.27\n");
+
     
     {
         clear_file();

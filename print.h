@@ -131,6 +131,13 @@ inline void Write(FILE *file, unsigned char c, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
+inline void Write(FILE *file, double c, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%g", c);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+
 inline void Write(FILE *file, bool b, bool) {
     fputs_unlocked(b ? "true" : "false", file);
 }
