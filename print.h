@@ -572,7 +572,7 @@ struct Print
     }
     
     ~Print() {
-        funlockfile(stdout);
+        funlockfile(file);
     }
 
 };
