@@ -13,7 +13,7 @@ print "Hello", "world", time(0);       // Hello world 1360826578
 print "name=%q age=%s" % "Alex", 26;   // name="Alex" age=26
 
 std::vector<std::string> things = {"apples", "oranges", "elephants"};
-print things;                          // [appples, oranges, elephants]
+print things;                          // [apples, oranges, elephants]
 
 ```
 The first form of the **print** statement converts each expression into a string and prints it to standard output, with each expression separated by a space and a terminating newline at the end.
