@@ -16,7 +16,7 @@ std::vector<std::string> things = {"apples", "oranges", "elephants"};
 print things;                          // [apples, oranges, elephants]
 
 ```
-The first form of the **print** statement converts each expression into a string and prints it to standard output, with each expression separated by a space and a terminating newline at the end.
+The first form converts each expression into a string and prints it to standard output, with each expression separated by a space and a terminating newline at the end.
 **warn** is similar except it prints to standard error.
 
 The second form uses a format string similar to printf().
@@ -26,18 +26,18 @@ The second form uses a format string similar to printf().
 
 Expressions are converted to strings according to their type, as follows:
 
-- `char*` prints a nul-terminated like %s.
+- `char*` are output as NUL-terminated strings like %s.
 - `int`, `short`, `long`, `signed char`, `unsigned char` are printed in decimal notation like with %d.
 - `char` prints the charcter like %c.
 - `void *` or any other kind of pointers prints ths pointer in hex like %p.
 - `double`, `float` prints the number in decimal notation like %g.
 - `bool` prints 'true' or 'false'
-- A type that defines a member function called `c_str()` is printed by calling c_str() on it and printing the output.
-- A type that is can printed using `std::ostream << thing` but does not have a `c_str()` member function is printed using `<<`.
-- A type that has a `begin()` member function but does not have a `c_str()` member function is printed like a list, e.g. `["one", "two"]`.
-- `std:map`, `std::unordered_map`, `std::multimap`, `std::unordered_multipmap`, `QHash`, `QMap`, `QMultiHash`, `QMultiMap` are printed like dictionaries, e.g. `{"foo": "bar"}`.
+- A type that defines a member function called `c_str()` is converted to a string by calling this function.
+- A type than can be streamed to an `std::ostream` like `std::cout << thing` but does not have a `c_str()` member function is converted to a string using `<<`.
+- A type that has a `begin()` member function that returns in iterator but does not have a `c_str()` member function is printed like a list, e.g. `["one", "two"]`.
+- `std:map`, `std::unordered_map`, `std::multimap`, `std::unordered_multipmap`, `QHash`, `QMap`, `QMultiHash`, `QMultiMap` are special-cased and printed like dictionaries, e.g. `{"foo": "bar"}`.
 - `QString` is printed as a string.
-- a `std::pair` is printed as (::first, ::second).
+- `std::pair` is rendered as `("first", "second")`.
 
 
 #### Usage ####
