@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <utility>
 
 #include "print.h"
 
@@ -93,6 +94,18 @@ int main() {
         
         
         TEST("hello from <This is a std::string.>\n");
+    }
+    
+    {
+        clear_file();
+        std::vector<int> vec;
+        vec.push_back(1);
+        vec.push_back(2);
+        vec.push_back(3);
+        std::pair< std::vector<int>, int> p(vec, 1);
+        
+        pretty::Print(file) * p;
+        TEST("([1, 2, 3], 1)\n");
     }
 }
 

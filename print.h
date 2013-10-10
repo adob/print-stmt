@@ -34,6 +34,32 @@ namespace std {
 
 namespace pretty {
 
+inline void WriteCharQuoted(FILE *file, char c) {
+    switch (c) {
+        case '\r':
+            fputs_unlocked("\\r", file); break;
+        case '\n':
+            fputs_unlocked("\\n", file); break;
+        case '\t':
+            fputs_unlocked("\\t", file); break;
+        case '\\':
+            fputs_unlocked("\\\\", file); break;
+        case '"':
+            fputs_unlocked("\\\"", file); break;
+        case '\0':
+            fputs_unlocked("\\0", file); break;
+        default:
+            putc_unlocked(c, file);
+    }
+}
+
+// inline void WriteChar(File *file, char c, bool quoted) {
+//     if (quoted)
+//         WriteCharQuoted(file, c, quoted);
+//     else
+//         putc_unlocked(c, file);
+// }
+    
 inline void Write(FILE *file, const char *str, bool quoted) {
     if (!quoted) 
     {
@@ -43,22 +69,22 @@ inline void Write(FILE *file, const char *str, bool quoted) {
     {
         putc_unlocked('"', file);
         while (*str != '\0') {
-            switch (*str) {
-                case '\r':
-                    fputs_unlocked("\\r", file); break;
-                case '\n':
-                    fputs_unlocked("\\n", file); break;
-                case '\t':
-                    fputs_unlocked("\\t", file); break;
-                case '\\':
-                    fputs_unlocked("\\\\", file); break;
-                case '"':
-                    fputs_unlocked("\\\"", file); break;
-                default:
-                    putc_unlocked(*str, file);
-            }
-            
-            str++;
+            WriteCharQuoted(file, *str++);
+        }
+        putc_unlocked('"', file);
+    }
+}
+
+inline void Write(FILE *file, const char *str, size_t len, bool quoted) {
+    if (!quoted) 
+    {
+        fputs_unlocked(str, file);
+    }
+    else 
+    {
+        putc_unlocked('"', file);
+        for (size_t i = 0; i < len; i++) {
+            WriteCharQuoted(file, *str++);
         }
         putc_unlocked('"', file);
     }
@@ -116,6 +142,8 @@ inline void Write(FILE *file, char c, bool quoted) {
                 fputs_unlocked("\\\\", file); break;
             case '\'':
                 fputs_unlocked("\\\'", file); break;
+            case '\0':
+                fputs_unlocked("\\0", file); break;
             default:
                 putc_unlocked(c, file);
         }
@@ -154,7 +182,7 @@ typename EnableIfInt<void,
     )
 >::type
 Write(FILE *file, STRING const& s, bool quoted) {
-    Write(file, s.c_str(), quoted);
+    Write(file, s.c_str(), s.size(), quoted);
 }
 
 
@@ -166,82 +194,14 @@ void Write(FILE *file, QString const& str, bool quoted)
 
 #endif
 
-#ifdef QHASH_H
-template <typename Key, typename T>
-void Write(FILE *file, QHash<Key, T> const& map, bool quoted)
-{
-    const QList<Key> keys = map.keys();
-    
-    fputs_unlocked("{ ", file);
-    
-    typename QList<Key>::const_iterator it = keys.begin();
-    
-    if (it != keys.end()) {
-        Write(file, *it, quoted);
-        fputs_unlocked(": ", file);
-        Write(file, map[*it], quoted);
-        
-        ++it;
-        
-        while (it != keys.end()) {
-            fputs_unlocked(", ", file);
-            
-            Write(file, *it, quoted);
-            fputs_unlocked(": ", file);
-            Write(file, map[*it], quoted);
-            ++it;
-        }
-    }
-    
-    fputs_unlocked(" }", file);
-}
-#endif
-
-#ifdef QMAP_H
-template <typename Key, typename T>
-void Write(FILE *file, QMap<Key, T> const& map, bool quoted)
-{
-    const QList<Key> keys = map.keys();
-    
-    fputs_unlocked("{ ", file);
-    
-    typename QList<Key>::const_iterator it = keys.begin();
-    
-    if (it != keys.end()) {
-        Write(file, *it, quoted);
-        fputs_unlocked(": ", file);
-        Write(file, map[*it], quoted);
-        
-        ++it;
-        
-        while (it != keys.end()) {
-            fputs_unlocked(", ", file);
-            
-            Write(file, *it, quoted);
-            fputs_unlocked(": ", file);
-            Write(file, map[*it], quoted);
-            ++it;
-        }
-    }
-    
-    fputs_unlocked(" }", file);
-}
-#endif
-
-template < typename ReturnType, typename T > 
-struct EnableIfType { 
-    typedef ReturnType type; 
-};
-
-
 template <typename T1, typename T2 >
 void
 Write(FILE *file, std::pair<T1, T2> const& pair, bool quoted)
 {
     putc_unlocked('(', file);
-    Write(file, pair.first, quoted);
+    WriteX(file, pair.first, quoted);
     fputs_unlocked(", ", file);
-    Write(file, pair.second, quoted);
+    WriteX(file, pair.second, quoted);
     putc_unlocked(')', file);
 }
 
@@ -303,13 +263,13 @@ Write(FILE *file, Iterable const& iterable, bool quoted)
     putc_unlocked('[', file);
     
     if (it != iterable.end()) {
-        Write(file, *it, quoted);
+        WriteX(file, *it, quoted);
         ++it;
         
         while (it != iterable.end()) {
             fputs_unlocked(", ", file);
                 
-            Write(file, *it, quoted);
+            WriteX(file, *it, quoted);
             ++it;
         }
     }
@@ -327,18 +287,18 @@ WriteMap_Pairs(FILE *file, T const& map, bool quoted)
     fputs_unlocked("{ ", file);
     
     if (it != map.end()) {
-        Write(file, it->first, quoted);
+        WriteX(file, it->first, quoted);
         fputs_unlocked(": ", file);
-        Write(file, it->second, quoted);
+        WriteX(file, it->second, quoted);
         
         ++it;
         
         while (it != map.end()) {
             fputs_unlocked(", ", file);
             
-            Write(file, it->first, quoted);
+            WriteX(file, it->first, quoted);
             fputs_unlocked(": ", file);
-            Write(file, it->second, quoted);
+            WriteX(file, it->second, quoted);
             ++it;
         }
     }
@@ -361,21 +321,131 @@ Write(FILE *file, ::std::unordered_map<Key, T, Hash, KeyEqual, Allocator> const&
     WriteMap_Pairs(file, map, quoted);
 }
 
-// template <typename T>
-// T&
-// DeclVal();
-// 
-// 
-// // template <typename T>
-// // typename EnableIfInt<void, 
-// //     sizeof (
-// //         &( DeclVal<QDataStream>() << DeclVal<T>() )
-// //    )>::type
-// // Write(FILE *, T & )
-// // {
-// //     //
-// // }
 
+
+#if defined(QHASH_H) || defined(QMAP_H)
+template <typename T>
+void WriteMap_Qt(FILE *file, T const& map, bool quoted) {
+    const QList<typename T::key_type> keys = map.keys();
+    
+    fputs_unlocked("{ ", file);
+    
+    typename QList<typename T::key_type>::const_iterator it = keys.begin();
+    
+    if (it != keys.end()) {
+        goto skip_comma;
+    }
+    else {
+        goto done;
+    }
+    
+    while (it != keys.end()) {
+        
+        fputs_unlocked(", ", file);
+        
+        skip_comma:
+        WriteX(file, *it, quoted);
+        fputs_unlocked(": ", file);
+        WriteX(file, map.values(*it), quoted);
+        ++it;
+    }
+    
+    done:
+    fputs_unlocked(" }", file);
+}
+
+#ifdef QHASH_H
+template <typename Key, typename T>
+void Write(FILE *file, QHash<Key, T> const& map, bool quoted) {
+    WriteMap_Qt(file, map, quoted);
+}
+#endif
+
+
+#ifdef QMAP_H
+template <typename Key, typename T>
+void Write(FILE *file, QMap<Key, T> const& map, bool quoted) {
+    WriteMap_Qt(file, map, quoted);
+}
+
+template <typename Key, typename T>
+void Write(FILE *file, QMultiMap<Key, T> const& map, bool quoted) {
+    WriteMap_Qt(file, map, quoted);
+}
+#endif
+#endif
+
+template <typename T>
+T to_instance();
+
+template <typename T>
+T& to_instance_ref();
+
+template <typename T>
+T* make_new(void *ptr) {
+    struct M : public T {
+        
+    };
+    
+    M *mp = new (ptr) M();
+    return mp;
+}
+
+template <typename T, typename STREAMBUF>
+void
+WriteStream(FILE *file, T const& t, bool quoted) {
+    struct OutputStream : public STREAMBUF {
+        FILE *file;
+        bool quoted;
+        
+        OutputStream(FILE *f, bool q) : file(f), quoted(q) {}
+        
+        std::streamsize xsputn(const char *s, std::streamsize cnt) {
+            if (quoted) {
+                for (std::streamsize i = 0; i < cnt; i++) {
+                    WriteCharQuoted(file, *s++);
+                }
+            }
+            else {
+                fwrite_unlocked(s, cnt, 1, file);
+            }
+            
+            return cnt;
+        }
+        
+        typename STREAMBUF::int_type overflow(char ch) {
+            if (quoted)
+                WriteCharQuoted(file, ch);
+            else
+                putc_unlocked(ch, file);
+            return 1;
+        }
+    };
+    
+    OutputStream buf(file, quoted);
+    std::ostream stream(&buf);
+    if (quoted)
+        putc_unlocked('"', file);
+    stream << t;
+    if (quoted)
+        putc_unlocked('"', file);
+}
+
+template <typename T>
+typename EnableIf2<void,
+    sizeof( to_instance_ref< ::std::ostream >() << to_instance<T>() ),
+    typename Test<  sizeof ( test_cstr<T>( 0 ) )  >::No
+>::type
+Write(FILE *file, T const& t, bool quoted) {
+    WriteStream<T, ::std::streambuf>(file, t, quoted);
+}
+
+
+// WTF: this should be forward-declared at the top but it works anyway
+template <typename T>
+void WriteX(FILE *file, T const& t, bool quoted) {
+    Write(file, t, quoted);
+}
 
 struct PrintFormatted
 {
@@ -383,14 +453,11 @@ struct PrintFormatted
     const char *str;
     const char *percent;
     
-    PrintFormatted(FILE *f, const char *s) : file(f), str(s)
-    {
-        //puts("created PrintFormatted");
+    PrintFormatted(FILE *f, const char *s) : file(f), str(s){
         do_print();
     }
     
-    void do_print()
-    {
+    void do_print() {
         while (*str)
         {
             if (*str == '%' && *(str+1) != '%')
@@ -411,18 +478,15 @@ struct PrintFormatted
         done: ;
     }
     
-        template <typename T>
-    PrintFormatted& operator , (T const& t)
-    {
+    template <typename T>
+    PrintFormatted& operator , (T const& t) {
         bool quoted = (percent[1] == 'q');
         Write(file, t, quoted);
         do_print();
         return *this;
     }
     
-    ~PrintFormatted() 
-    {
-        //puts("destoryed PrintFormatted");
+    ~PrintFormatted() {
         if (percent) {
             fputs_unlocked(percent, file);
             putc_unlocked('\n', file);
@@ -437,19 +501,16 @@ struct PrintUnformatted
     FILE *file;
     
     PrintUnformatted(FILE *f) : file(f) { 
-        //puts("created PrintUnformatted"); 
     }
     
     template <typename T>
-    PrintUnformatted& operator , (T t)
-    {
+    PrintUnformatted& operator , (T t) {
         putc_unlocked(' ', file);
         Write(file, t, false);
         return *this;
     }
     
     ~PrintUnformatted() {
-        //puts("destoryed PrintUnformatted");
         putc_unlocked('\n', file);
     }
     
@@ -460,9 +521,8 @@ struct PrintUndecided
     FILE *file;
     const char *str;
     
-    PrintUndecided(FILE *f, const char *s) : file(f), str(s) 
-    { 
-        //puts("created PrintUndecided"); 
+    PrintUndecided(FILE *f, const char *s) : file(f), str(s) {
+        
     }
     
     template <typename T>
@@ -485,7 +545,6 @@ struct PrintUndecided
     }
     
     ~PrintUndecided() {
-        //puts("destoryed PrintUndecided");
         if (str != 0) {
             fputs_unlocked(str, file);
             putc_unlocked('\n', file);
@@ -498,26 +557,21 @@ struct Print
 {        
     FILE *file;
     
-    Print(FILE *f = stdout) : file(f)
-    { 
-        //puts("created Print"); 
+    Print(FILE *f = stdout) : file(f) { 
         flockfile(f);
     }
     
     template <typename T>
-    PrintUnformatted operator * (T const& t) 
-    {
+    PrintUnformatted operator * (T const& t) {
         Write(file, t, false);
         return PrintUnformatted(file);
     }
     
-    PrintUndecided operator * (const char *str) 
-    {
+    PrintUndecided operator * (const char *str) {
         return PrintUndecided(file, str);
     }
     
     ~Print() {
-        //puts("destoryed Print");
         funlockfile(stdout);
     }
 

@@ -26,6 +26,11 @@ void use_printf() {
         printf("string='%s' count='%d'\n", string, count);
 }
 
+// void use_printf_unlocked() {
+//     for (int i=0; i<count; i++)
+//         printf_unlocked("string='%s' count='%d'\n", string, count);
+// }
+
 void use_puts() {
     for (int i=0; i<count; i++) 
         puts(string);        
@@ -74,6 +79,11 @@ void use_putc() {
         putc('\n', stdout);
     }
 }
+
+// void use_fputs() {
+//     fputs("string='", stdout);
+//     fputs()
+// }
 
 int main() { 
     
