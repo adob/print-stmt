@@ -107,6 +107,25 @@ int main() {
         pretty::Print(file) * p;
         TEST("([1, 2, 3], 1)\n");
     }
+    
+    {
+        clear_file();
+        pretty::Print(file) * "abc%" % 1;
+        TEST("abc% 1\n");
+    }
+    
+    {
+        clear_file();
+        pretty::Print(file) * "abc %s %s %" % "A";
+        TEST("abc A %s %\n");
+    }
+    
+    {
+        clear_file();
+        pretty::Print(file) * "abc %s %s %" % "A", "B", "C", "D";
+        TEST("abc A B % C D\n");
+    }
+    
 }
 
 

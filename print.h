@@ -34,6 +34,15 @@ namespace std {
 
 namespace pretty {
 
+typedef unsigned Opt;
+const Opt OptNone   = 0;
+const Opt OptQuoted = 1 << 1;
+const Opt OptDone   = 1 << 2;
+
+    
+template <typename T>
+void WriteX(FILE *, T const&, bool);
+
 inline void WriteCharQuoted(FILE *file, char c) {
     switch (c) {
         case '\r':
@@ -391,7 +400,7 @@ T* make_new(void *ptr) {
     return mp;
 }
 
-template <typename T, typename STREAMBUF>
+template <typename T, typename STREAMBUF, typename OSTREAM>
 void
 WriteStream(FILE *file, T const& t, bool quoted) {
     struct OutputStream : public STREAMBUF {
@@ -423,7 +432,7 @@ WriteStream(FILE *file, T const& t, bool quoted) {
     };
     
     OutputStream buf(file, quoted);
-    std::ostream stream(&buf);
+    OSTREAM stream(&buf);
     if (quoted)
         putc_unlocked('"', file);
     stream << t;
@@ -437,11 +446,9 @@ typename EnableIf2<void,
     typename Test<  sizeof ( test_cstr<T>( 0 ) )  >::No
 >::type
 Write(FILE *file, T const& t, bool quoted) {
-    WriteStream<T, ::std::streambuf>(file, t, quoted);
+    WriteStream<T, ::std::streambuf, ::std::ostream>(file, t, quoted);
 }
 
-
-// WTF: this should be forward-declared at the top but it works anyway
 template <typename T>
 void WriteX(FILE *file, T const& t, bool quoted) {
     Write(file, t, quoted);
@@ -451,46 +458,63 @@ struct PrintFormatted
 {
     FILE *file;
     const char *str;
-    const char *percent;
+    unsigned opts;
     
-    PrintFormatted(FILE *f, const char *s) : file(f), str(s){
+    PrintFormatted(FILE *f, const char *s) : file(f), str(s) {
         do_print();
     }
     
     void do_print() {
-        while (*str)
+        for (; *str; str++)
         {
-            if (*str == '%' && *(str+1) != '%')
+            if (*str == '%')
             {
-                percent = str;
+                switch (str[1]) {
+                    case '\0':
+                    case '%':
+                        goto skip;
+                        
+                    case 'q':
+                        opts = OptQuoted;
+                        break;
+                    default:
+                        opts = OptNone;
+                        break;
+                }
+                
                 str += 2;
-                goto done;
+                return;
             }
             
+            skip:
             putc_unlocked(*str, file);
             
-            str++;
         }
         
-        putc_unlocked('\n', file);
-        percent = 0;
-        
-        done: ;
+        opts = OptNone | OptDone;
     }
     
     template <typename T>
     PrintFormatted& operator , (T const& t) {
-        bool quoted = (percent[1] == 'q');
+        bool quoted = opts & OptQuoted;
+        
+        if (opts & OptDone)
+            putc_unlocked(' ', file);
+        
         Write(file, t, quoted);
-        do_print();
+        
+        if (!(opts & OptDone))
+            do_print();
+        
         return *this;
     }
     
     ~PrintFormatted() {
-        if (percent) {
-            fputs_unlocked(percent, file);
-            putc_unlocked('\n', file);
+        if (!(opts & OptDone)) {
+            fputs_unlocked(str-2, file);
         }
+        
+        putc_unlocked('\n', file);
     }
  
 };
