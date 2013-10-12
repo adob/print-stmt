@@ -1,6 +1,6 @@
 all: test-gcc test-clang example perf-gcc perf-clang
 
-run-tests: test
+run-tests: test-gcc test-clang
 	./test-gcc && echo "gcc all tests passed"
 	./test-clang && echo "clang all tests passed"
 
@@ -13,8 +13,8 @@ example: example.cpp print.h
 
 	
 perf-gcc perf-clang: perf.cpp print.h
-	g++ -O3 -Wall -std=gnu++0x -o perf-gcc perf.cpp
-	clang++ -O3 -Wall -std=gnu++0x -o perf-clang perf.cpp
+	g++-4.8 -O2 -Wall -std=gnu++0x -o perf-gcc perf.cpp
+	clang++ -O2 -Wall -std=gnu++0x -o perf-clang perf.cpp
 	
 
 clean:
