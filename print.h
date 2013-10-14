@@ -461,18 +461,6 @@ Write(FILE *file, T const& t, bool quoted) {
     WriteStream<T, ::std::streambuf, ::std::ostream>(file, t, quoted);
 }
 
-// template <typename T>
-// void Write(FILE *file, T const& t, bool quoted) {
-//     fputc_unlocked('<', file);
-// #ifdef __GXX_RTTI
-//     int status;
-//     char *demangled = abi::__cxa_demangle(typeid(t).name(), 0, 0, &status);
-//     fputs_unlocked(demangled, file);
-//     free(demangled);
-// #endif
-//     fputc_unlocked('>', file);
-// }
-
 template <typename T>
 void WriteX(FILE *file, T const& t, bool quoted) {
     Write(file, t, quoted);
