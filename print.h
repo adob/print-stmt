@@ -30,6 +30,18 @@ namespace std {
     
     template<class Key, class T, class Hash, class KeyEqual, class Allocator> 
     struct unordered_map;
+    
+    template <typename CharT>
+    struct char_traits;
+    
+    template < typename CharT, typename Traits>
+    class basic_streambuf;
+    
+    template <typename charT, typename traits>
+    class basic_ostream;
+    
+    typedef basic_ostream< char, char_traits<char> > ostream;
+    typedef basic_streambuf< char, char_traits<char> > streambuf;
 }
 
 namespace pretty {
@@ -409,9 +421,9 @@ WriteStream(FILE *file, T const& t, bool quoted) {
         
         OutputStream(FILE *f, bool q) : file(f), quoted(q) {}
         
-        std::streamsize xsputn(const char *s, std::streamsize cnt) {
+        size_t xsputn(const char *s, size_t cnt) {
             if (quoted) {
-                for (std::streamsize i = 0; i < cnt; i++) {
+                for (size_t i = 0; i < cnt; i++) {
                     WriteCharQuoted(file, *s++);
                 }
             }
@@ -448,6 +460,18 @@ typename EnableIf2<void,
 Write(FILE *file, T const& t, bool quoted) {
     WriteStream<T, ::std::streambuf, ::std::ostream>(file, t, quoted);
 }
+
+// template <typename T>
+// void Write(FILE *file, T const& t, bool quoted) {
+//     fputc_unlocked('<', file);
+// #ifdef __GXX_RTTI
+//     int status;
+//     char *demangled = abi::__cxa_demangle(typeid(t).name(), 0, 0, &status);
+//     fputs_unlocked(demangled, file);
+//     free(demangled);
+// #endif
+//     fputc_unlocked('>', file);
+// }
 
 template <typename T>
 void WriteX(FILE *file, T const& t, bool quoted) {
