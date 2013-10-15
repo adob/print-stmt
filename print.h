@@ -83,12 +83,13 @@ inline void WriteCharQuoted(FILE *file, char c) {
 // }
     
 inline void Write(FILE *file, const char *str, bool quoted) {
-    if (!quoted) 
-    {
+    if (!str) {
+        fputs_unlocked("null", file);
+    }
+    else if (!quoted) {
         fputs_unlocked(str, file);
     }
-    else 
-    {
+    else {
         putc_unlocked('"', file);
         while (*str != '\0') {
             WriteCharQuoted(file, *str++);
@@ -98,12 +99,13 @@ inline void Write(FILE *file, const char *str, bool quoted) {
 }
 
 inline void Write(FILE *file, const char *str, size_t len, bool quoted) {
-    if (!quoted) 
-    {
+    if (!str) {
+        fputs_unlocked("null", file);
+    }
+    else if (!quoted)  {
         fputs_unlocked(str, file);
     }
-    else 
-    {
+    else {
         putc_unlocked('"', file);
         for (size_t i = 0; i < len; i++) {
             WriteCharQuoted(file, *str++);
@@ -574,8 +576,9 @@ struct PrintUndecided
 {
     FILE *file;
     const char *str;
+    bool str_present;
     
-    PrintUndecided(FILE *f, const char *s) : file(f), str(s) {
+    PrintUndecided(FILE *f, const char *s) : file(f), str(s), str_present(true) {
         
     }
     
@@ -584,23 +587,23 @@ struct PrintUndecided
     {
         PrintFormatted pf(file, str);
         pf, t;
-        str = 0;
+        str_present = false;
         return pf;
     }
     
     template <typename T>
     PrintUnformatted operator , (T const& t)
     {
-        fputs_unlocked(str, file);
+        Write(file, str, false);
         putc_unlocked(' ', file);
         Write(file, t, false);
-        str = 0;
+        str_present = false;
         return PrintUnformatted(file);
     }
     
     ~PrintUndecided() {
-        if (str != 0) {
-            fputs_unlocked(str, file);
+        if (str_present) {
+            Write(file, str, false);
             putc_unlocked('\n', file);
         }
         

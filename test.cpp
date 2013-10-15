@@ -143,6 +143,20 @@ int main() {
         //TEST("<MyClass>\n");
         
     }
+    
+    {
+        clear_file();
+        const char *str = 0;
+        pretty::Print(file) * str;
+        TEST("null\n");
+    }
+    
+    {
+        clear_file();
+        const char *str = 0;
+        pretty::Print(file) * "foo", str;
+        TEST("foo null\n");
+    }
 }
 
 
