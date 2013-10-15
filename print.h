@@ -20,6 +20,7 @@
 
 #pragma once
 #include <stdio.h>
+#include <stddef.h>
 
 namespace std {
     template <typename T1, typename T2>
@@ -139,7 +140,8 @@ inline void Write(FILE *file, unsigned long num, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
-inline void Write(FILE *file, void *p, bool) {
+template <typename T>
+inline void Write(FILE *file, T *p, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%p", p);
     
@@ -171,6 +173,10 @@ inline void Write(FILE *file, char c, bool quoted) {
         putc_unlocked('\'', file);
         
     }
+}
+
+inline void Write(FILE *file, signed char c, bool) {
+    Write(file, (int)c, false);
 }
 
 inline void Write(FILE *file, unsigned char c, bool) {
@@ -421,7 +427,7 @@ WriteStream(FILE *file, T const& t, bool quoted) {
         
         OutputStream(FILE *f, bool q) : file(f), quoted(q) {}
         
-        size_t xsputn(const char *s, size_t cnt) {
+        ptrdiff_t xsputn(const char *s, ptrdiff_t cnt) {
             if (quoted) {
                 for (size_t i = 0; i < cnt; i++) {
                     WriteCharQuoted(file, *s++);
@@ -434,7 +440,7 @@ WriteStream(FILE *file, T const& t, bool quoted) {
             return cnt;
         }
         
-        typename STREAMBUF::int_type overflow(char ch) {
+        typename STREAMBUF::int_type overflow(typename STREAMBUF::int_type ch) {
             if (quoted)
                 WriteCharQuoted(file, ch);
             else
@@ -460,6 +466,18 @@ typename EnableIf2<void,
 Write(FILE *file, T const& t, bool quoted) {
     WriteStream<T, ::std::streambuf, ::std::ostream>(file, t, quoted);
 }
+
+// template <typename T>
+// void Write(FILE *file, T const& t, bool quoted) {
+//     fputc_unlocked('<', file);
+// #ifdef __GXX_RTTI
+//     int status;
+//     char *demangled = abi::__cxa_demangle(typeid(t).name(), 0, 0, &status);
+//     fputs_unlocked(demangled, file);
+//     free(demangled);
+// #endif
+//     fputc_unlocked('>', file);
+// }
 
 template <typename T>
 void WriteX(FILE *file, T const& t, bool quoted) {
@@ -599,6 +617,7 @@ struct Print
     
     template <typename T>
     PrintUnformatted operator * (T const& t) {
+
         Write(file, t, false);
         return PrintUnformatted(file);
     }

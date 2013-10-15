@@ -5,6 +5,7 @@
 #include <vector>
 #include <stdint.h>
 #include <utility>
+#include <ostream>
 
 #include "print.h"
 
@@ -18,6 +19,16 @@ int testcnt = 0;
 
 void do_test(int testno, const char *expected, int lineno);
 void clear_file();
+
+struct MyClass {
+    
+};
+
+std::ostream& operator << (std::ostream& s, MyClass const& o) {
+    s << "<MyClass>";
+    return s;
+}
+
 
 
 #define TEST(expected) do_test(++testcnt, expected, __LINE__)
@@ -126,6 +137,12 @@ int main() {
         TEST("abc A B % C D\n");
     }
     
+    {
+        //clear_file();
+        //pretty::Print(file) * MyClass();
+        //TEST("<MyClass>\n");
+        
+    }
 }
 
 
