@@ -22,6 +22,17 @@
 #include <stdio.h>
 #include <stddef.h>
 
+#ifdef __GXX_RTTI
+#include <typeinfo>
+extern "C" {
+char*
+__cxa_demangle(const char* __mangled_name, char* __output_buffer,
+               size_t* __length, int* __status);
+
+void free(void*);
+}
+#endif
+
 namespace std {
     template <typename T1, typename T2>
     struct pair;
@@ -144,8 +155,15 @@ inline void Write(FILE *file, unsigned long num, bool) {
 
 template <typename T>
 inline void Write(FILE *file, T *p, bool) {
-    char buf[100];
+    char buf[256];
+#ifdef __GXX_RTTI   
+    int status;
+    char *demangled = __cxa_demangle(typeid(p).name(), 0, 0, &status);
+    int cnt = snprintf(buf, sizeof buf, "<%s at %p>", demangled, p);
+    free(demangled);
+#else
     int cnt = snprintf(buf, sizeof buf, "%p", p);
+#endif
     
     fwrite_unlocked(buf, 1, cnt, file);
 }
@@ -193,6 +211,10 @@ inline void Write(FILE *file, double c, bool) {
     int cnt = snprintf(buf, sizeof buf, "%g", c);
     
     fwrite_unlocked(buf, 1, cnt, file);
+}
+
+inline void Write(FILE *file, float f, bool) {
+    Write(file, (double) f, true);
 }
 
 inline void Write(FILE *file, bool b, bool) {
@@ -469,17 +491,18 @@ Write(FILE *file, T const& t, bool quoted) {
     WriteStream<T, ::std::streambuf, ::std::ostream>(file, t, quoted);
 }
 
-// template <typename T>
-// void Write(FILE *file, T const& t, bool quoted) {
-//     fputc_unlocked('<', file);
-// #ifdef __GXX_RTTI
-//     int status;
-//     char *demangled = abi::__cxa_demangle(typeid(t).name(), 0, 0, &status);
-//     fputs_unlocked(demangled, file);
-//     free(demangled);
-// #endif
-//     fputc_unlocked('>', file);
-// }
+
+template <typename T>
+void Write(FILE *file, T const& t, ...) {
+#ifdef __GXX_RTTI   
+    int status;
+    char *demangled = __cxa_demangle(typeid(t).name(), 0, 0, &status);
+    fprintf(file, "<%s>", demangled);
+    free(demangled);
+#else
+    fputs_unlocked("<?>", file);
+#endif
+}
 
 template <typename T>
 void WriteX(FILE *file, T const& t, bool quoted) {

@@ -24,10 +24,18 @@ struct MyClass {
     
 };
 
+namespace foo {
+    class Bar {
+        
+    };
+}
+
 std::ostream& operator << (std::ostream& s, MyClass const& o) {
     s << "<MyClass>";
     return s;
 }
+
+
 
 
 
@@ -62,8 +70,9 @@ int main() {
     {
         clear_file();
         char tmp[100];
-        sprintf(tmp, "p = %p\n", file);
-        pretty::Print(file) * "p =", file; 
+        foo::Bar bar;
+        sprintf(tmp, "p = <foo::Bar* at %p>\n", &bar);
+        pretty::Print(file) * "p =", &bar; 
         TEST(tmp);
     }
     
