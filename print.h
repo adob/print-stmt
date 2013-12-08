@@ -606,7 +606,7 @@ struct PrintUndecided
     }
     
     template <typename T>
-    PrintFormatted operator % (T t)
+    PrintFormatted operator % (T const& t)
     {
         PrintFormatted pf(file, str);
         pf, t;

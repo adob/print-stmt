@@ -31,7 +31,15 @@ struct S {
     }
 };
 
+char buf3[4] = "123";
+
 int main() {
+    print "Hello";
+    
+    const char *buf1 = "345";
+    char buf2[] = "123";
+    print "str %s %s %s" % buf1, buf2, buf3;
+    print "str %s" % buf3;
     
     std::string str = "Hello World";
     std::vector<int> vec = {23, 44, 645};
