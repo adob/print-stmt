@@ -453,7 +453,7 @@ WriteStream(FILE *file, T const& t, bool quoted) {
         
         ptrdiff_t xsputn(const char *s, ptrdiff_t cnt) {
             if (quoted) {
-                for (size_t i = 0; i < cnt; i++) {
+                for (ptrdiff_t i = 0; i < cnt; i++) {
                     WriteCharQuoted(file, *s++);
                 }
             }
