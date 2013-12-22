@@ -125,6 +125,10 @@ inline void Write(FILE *file, const char *str, size_t len, bool quoted) {
     }
 }
 
+inline void Write(FILE *file, char *str, bool quoted) {
+    Write(file, (const char *) str, quoted);
+}
+
 inline void Write(FILE *file, int num, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%d", num);
