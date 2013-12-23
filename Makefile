@@ -1,12 +1,15 @@
-all: test-gcc test-clang example perf-gcc perf-clang
+all: test-gcc test-clang test-gcc-c11 test-clang-c11 example perf-gcc perf-clang
 
-run-tests: test-gcc test-clang
-	./test-gcc && echo "gcc all tests passed"
-	./test-clang && echo "clang all tests passed"
+run-tests: test-gcc test-clang test-gcc-c11 test-clang-c11
+	./test-gcc && ./test-gcc-c11 && echo "gcc all tests passed"
+	./test-clang && ./test-clang-c11 && echo "clang all tests passed"
 
-test-gcc test-clang test2-gcc test2-clang: test.cpp test2.cpp print.h
+test-gcc test-clang test2-gcc test2-clang \
+test-gcc-c11 test-clang-c11: test.cpp test2.cpp print.h
 	g++-4.8 -g -O2 -Wall -fsanitize=address -std=c++98 -o test-gcc test.cpp
 	clang++ -g -O2 -Wall -fsanitize=address -std=c++98 -o test-clang test.cpp
+	g++-4.8 -g -O2 -Wall -fsanitize=address -std=c++1y -o test-gcc-c11 test.cpp
+	clang++ -g -O2 -Wall -fsanitize=address -std=c++1y -o test-clang-c11 test.cpp
 	g++-4.8 -g -O2 -Wall -std=c++98 -o test2-gcc test2.cpp
 	clang++ -g -O2 -Wall -std=c++98 -o test2-clang test2.cpp
 

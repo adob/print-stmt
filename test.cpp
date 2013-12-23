@@ -42,7 +42,6 @@ std::ostream& operator << (std::ostream& s, MyClass const& o) {
 #define TEST(expected) do_test(++testcnt, expected, __LINE__)
 
 int main() {
-    
     clear_file();
     fprintf(file, "hello\n");
     TEST("hello\n");
@@ -166,6 +165,15 @@ int main() {
         pretty::Print(file) * "foo", str;
         TEST("foo null\n");
     }
+    
+    #if defined(__GXX_EXPERIMENTAL_CXX0X__)
+    {
+        clear_file();
+        char32_t c = 233;
+        pretty::Print(file) * c;
+        TEST("é\n");
+    }
+    #endif
 }
 
 

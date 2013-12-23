@@ -1,6 +1,8 @@
 example
 test-gcc
+test-gcc-c11
 test-clang
+test-clang-c11
 test2-gcc
 test2-clang
 perf-gcc

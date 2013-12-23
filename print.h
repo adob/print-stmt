@@ -143,14 +143,21 @@ inline void Write(FILE *file, unsigned int num, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
-inline void Write(FILE *file, long num, bool) {
+inline void Write(FILE *file, short int num, bool) {
+    Write(file, (int) num, false);
+}
+inline void Write(FILE *file, short unsigned int num, bool) {
+    Write(file, (unsigned) num, false);
+}
+
+inline void Write(FILE *file, long int num, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%ld", num);
     
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
-inline void Write(FILE *file, unsigned long num, bool) {
+inline void Write(FILE *file, unsigned long int num, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%lu", num);
     
@@ -198,6 +205,50 @@ inline void Write(FILE *file, char c, bool quoted) {
         
     }
 }
+
+#if defined(__GXX_EXPERIMENTAL_CXX0X__)
+inline void Write(FILE *file, char32_t c, bool quoted) {
+    const char32_t MAX_RUNE  = 0x0010FFFF; // Maximum valid Unicode code point.
+    const char32_t SURROGATE_MIN = 0xD800;
+    const char32_t SURROGATE_MAX = 0xDFFF;
+    
+    const char32_t RUNE1_MAX = (1<<7)  - 1;
+    const char32_t RUNE2_MAX = (1<<11) - 1;
+    const char32_t RUNE3_MAX = (1<<16) - 1;
+    const char TX = 0x80; // 1000 0000
+    const char T2 = 0xC0; // 1100 0000
+    const char T3 = 0xE0; // 1110 0000
+    const char T4 = 0xF0; // 1111 0000
+    const char MASK_X = 0x3F; // 0011 1111
+    
+    
+    char buf[25];
+    char *p = buf;
+    if (quoted) *(p++) = '\'';
+    if (c <= RUNE1_MAX) {
+        Write(file, (char) c, quoted);
+        return;
+    } else if (c <= RUNE2_MAX) {
+        *(p++) = T2 | (c >> 6);
+        *(p++) = TX | (c & MASK_X);
+    } else if (c > MAX_RUNE || (SURROGATE_MIN <= c && c <= SURROGATE_MAX)) {
+        p += sprintf(p, "\\x%X", c);
+    } else if (c < RUNE3_MAX) {
+        *(p++) = T3 | (c >> 12);
+        *(p++) = TX | ((c >> 6) & MASK_X);
+        *(p++) = TX | (c & MASK_X);
+    } else {
+        *(p++) = T4 | (c >> 18);
+        *(p++) = TX | ((c >> 12) & MASK_X);
+        *(p++) = TX | ((c >> 6) & MASK_X);
+        *(p++) = TX | (c & MASK_X);
+    }
+    if (quoted) *(p++) = '\'';
+    *(p++) = '\0';
+    fputs_unlocked(buf, file);
+    
+}
+#endif
 
 inline void Write(FILE *file, signed char c, bool) {
     Write(file, (int)c, false);
