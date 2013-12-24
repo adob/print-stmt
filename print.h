@@ -22,6 +22,12 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
+
+// extern "C" {
+//     size_t strlen(const char *);
+//     void  *free(void *ptr);
+// }
 
 #ifdef __GXX_RTTI
 #include <typeinfo>
@@ -175,9 +181,17 @@ inline void Write(FILE *file, T *p, bool) {
 #else
     int cnt = snprintf(buf, sizeof buf, "%p", p);
 #endif
-    
     fwrite_unlocked(buf, 1, cnt, file);
 }
+
+#ifdef __GXX_RTTI
+inline void Write(FILE *file, std::type_info const& tinfo, bool) {
+    int status;
+    char *demangled = __cxa_demangle(tinfo.name(), 0, 0, &status);
+    fwrite_unlocked(demangled, 1, strlen(demangled), file);
+    free(demangled);
+}
+#endif
 
 inline void Write(FILE *file, char c, bool quoted) {
     if (!quoted)
