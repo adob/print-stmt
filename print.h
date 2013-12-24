@@ -175,9 +175,19 @@ inline void Write(FILE *file, T *p, bool) {
 #else
     int cnt = snprintf(buf, sizeof buf, "%p", p);
 #endif
-    
     fwrite_unlocked(buf, 1, cnt, file);
 }
+
+#ifdef __GXX_RTTI
+inline void Write(FILE *file, std::type_info const& tinfo, bool) {
+    char buf[256];
+    int status;
+    char *demangled = __cxa_demangle(tinfo.name(), 0, 0, &status);
+    int cnt = snprintf(buf, sizeof buf, "%s", demangled);
+    free(demangled);
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+#endif
 
 inline void Write(FILE *file, char c, bool quoted) {
     if (!quoted)
