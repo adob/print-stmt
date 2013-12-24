@@ -184,8 +184,7 @@ inline void Write(FILE *file, T *p, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
     
-    fwrite_unlocked(buf, 1, cnt, file);
-}
+
 #ifdef __GXX_RTTI
 inline void Write(FILE *file, std::type_info const& tinfo, bool) {
     int status;
