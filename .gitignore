@@ -7,3 +7,5 @@ test2-gcc
 test2-clang
 perf-gcc
 perf-clang
+test2-clang-c11
+test2-gcc-c11

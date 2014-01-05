@@ -12,6 +12,8 @@ test-gcc-c11 test-clang-c11: test.cpp test2.cpp print.h
 	clang++ -g -O2 -Wall -fsanitize=address -std=c++1y -o test-clang-c11 test.cpp
 	g++-4.8 -g -O2 -Wall -std=c++98 -o test2-gcc test2.cpp
 	clang++ -g -O2 -Wall -std=c++98 -o test2-clang test2.cpp
+	g++-4.8 -g -O2 -Wall -std=c++1y -o test2-gcc-c11 test2.cpp
+	clang++ -g -O2 -Wall -std=c++1y -o test2-clang-c11 test2.cpp
 
 example: example.cpp print.h
 	c++ -O2 -Wall -std=gnu++0x -o example example.cpp

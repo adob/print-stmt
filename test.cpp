@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
-#include <vector>
 #include <stdint.h>
-#include <utility>
-#include <ostream>
 
+
+#define PRETTYPRINT_NO_KEYWORD 1
 #include "print.h"
 
 
@@ -30,16 +28,26 @@ namespace foo {
     };
 }
 
-std::ostream& operator << (std::ostream& s, MyClass const& o) {
-    s << "<MyClass>";
-    return s;
+#define TEST(expected) do_test(++testcnt, expected, __LINE__)
+
+void more_tests() {
+    {
+        clear_file();
+        long long i = 42;
+        pretty::Print(file) * i;
+        TEST("42\n");
+    }
+    
+    {
+        clear_file();
+        long long int i = 42;
+        pretty::Print(file) * i;
+        TEST("42\n");
+    }
 }
 
-
-
-
-
-#define TEST(expected) do_test(++testcnt, expected, __LINE__)
+#include <string>
+#include <vector>
 
 int main() {
     clear_file();
@@ -173,7 +181,23 @@ int main() {
         pretty::Print(file) * c;
         TEST("é\n");
     }
+    {
+        clear_file();
+        char16_t c = 233;
+        pretty::Print(file) * c;
+        TEST("é\n");
+    }
     #endif
+    
+    {
+        clear_file();
+        wchar_t c = 233;
+        pretty::Print(file) * c;
+        TEST("é\n");
+    }
+    
+
+    more_tests();
 }
 
 
@@ -213,4 +237,10 @@ void do_test(int testno, const char *expected, int lineno) {
         
     }
     
+}
+
+#include <ostream>
+std::ostream& operator << (std::ostream& s, MyClass const& o) {
+    s << "<MyClass>";
+    return s;
 }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <type_traits>
 #include <unordered_set>
+//#include <iostream>
 
 #include "print.h"
 
@@ -60,5 +61,8 @@ int main() {
     print "files:", files;
     
     print "abc %o %o %o def" % 1, 2, 3;
+    
+    long long int x = 3;
+    pretty::Print(stdout) * x;
     
 }

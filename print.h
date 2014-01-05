@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 // extern "C" {
 //     size_t strlen(const char *);
@@ -170,6 +171,20 @@ inline void Write(FILE *file, unsigned long int num, bool) {
     fwrite_unlocked(buf, 1, cnt, file);
 }
 
+inline void Write(FILE *file, long long int num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%lld", num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+
+inline void Write(FILE *file, unsigned long long int num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%llu", num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+
 template <typename T>
 inline void Write(FILE *file, T *p, bool) {
     char buf[256];
@@ -221,15 +236,14 @@ inline void Write(FILE *file, char c, bool quoted) {
     }
 }
 
-#if defined(__GXX_EXPERIMENTAL_CXX0X__)
-inline void Write(FILE *file, char32_t c, bool quoted) {
-    const char32_t MAX_RUNE  = 0x0010FFFF; // Maximum valid Unicode code point.
-    const char32_t SURROGATE_MIN = 0xD800;
-    const char32_t SURROGATE_MAX = 0xDFFF;
+inline void WriteUTF8(FILE *file, uint32_t c, bool quoted) {
+    const uint32_t MAX_RUNE  = 0x0010FFFF; // Maximum valid Unicode code point.
+    const uint32_t SURROGATE_MIN = 0xD800;
+    const uint32_t SURROGATE_MAX = 0xDFFF;
     
-    const char32_t RUNE1_MAX = (1<<7)  - 1;
-    const char32_t RUNE2_MAX = (1<<11) - 1;
-    const char32_t RUNE3_MAX = (1<<16) - 1;
+    const uint32_t RUNE1_MAX = (1<<7)  - 1;
+    const uint32_t RUNE2_MAX = (1<<11) - 1;
+    const uint32_t RUNE3_MAX = (1<<16) - 1;
     const char TX = 0x80; // 1000 0000
     const char T2 = 0xC0; // 1100 0000
     const char T3 = 0xE0; // 1110 0000
@@ -261,9 +275,34 @@ inline void Write(FILE *file, char32_t c, bool quoted) {
     if (quoted) *(p++) = '\'';
     *(p++) = '\0';
     fputs_unlocked(buf, file);
-    
+}
+
+#if defined(__GXX_EXPERIMENTAL_CXX0X__)
+inline void Write(FILE *file, char32_t c, bool quoted) {
+    WriteUTF8(file, (uint32_t)c, quoted);
+}
+inline void Write(FILE *file, char16_t c, bool quoted) {
+    WriteUTF8(file, (uint32_t)c, quoted);
 }
 #endif
+inline void Write(FILE *file, wchar_t c, bool quoted) {
+    WriteUTF8(file, (uint32_t)c, quoted);
+}
+
+//TODO: fix this
+inline void Write(FILE *file, __int128 num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%lld", (long long)num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}
+//TODO: fix this
+inline void Write(FILE *file, unsigned __int128 num, bool) {
+    char buf[100];
+    int cnt = snprintf(buf, sizeof buf, "%llu", (unsigned long long)num);
+    
+    fwrite_unlocked(buf, 1, cnt, file);
+}  
 
 inline void Write(FILE *file, signed char c, bool) {
     Write(file, (int)c, false);
@@ -284,6 +323,9 @@ inline void Write(FILE *file, double c, bool) {
 }
 
 inline void Write(FILE *file, float f, bool) {
+    Write(file, (double) f, true);
+}
+inline void Write(FILE *file, long double f, bool) {
     Write(file, (double) f, true);
 }
 
@@ -729,6 +771,8 @@ struct Print
 };
 }
 
+#ifndef PRETTYPRINT_NO_KEYWORD
 #define print (::pretty::Print(stdout))*
 #define warn  (::pretty::Print(stderr))*
+#endif
 
