@@ -66,9 +66,10 @@ namespace std {
 namespace pretty {
 
 typedef unsigned Opt;
-const Opt OptNone   = 0;
-const Opt OptQuoted = 1 << 1;
-const Opt OptDone   = 1 << 2;
+const Opt OptNone       = 1;
+const Opt OptQuoted     = 1 << 1;
+const Opt OptDone       = 1 << 2;
+//const Opt OptStrPresent = 1 << 3;
 
     
 template <typename T>
@@ -621,13 +622,17 @@ void WriteX(FILE *file, T const& t, bool quoted) {
     Write(file, t, quoted);
 }
 
-struct PrintFormatted
+struct PrintBase
 {
-    FILE *file;
+    FILE       *file;
     const char *str;
-    unsigned opts;
-    
-    PrintFormatted(FILE *f, const char *s) : file(f), str(s) {
+    unsigned    opts;
+    bool        str_present;
+} ;
+
+struct PrintFormatted : PrintBase
+{
+    void init_PrintFormatted() {
         do_print();
     }
     
@@ -670,101 +675,85 @@ struct PrintFormatted
         
         Write(file, t, quoted);
         
-        if (!(opts & OptDone))
+        if (~opts & OptDone)
             do_print();
         
         return *this;
     }
-    
-    ~PrintFormatted() {
-        if (!(opts & OptDone)) {
-            fputs_unlocked(str-2, file);
-        }
-        
-        putc_unlocked('\n', file);
-    }
- 
+
 };
 
 
-struct PrintUnformatted
+struct PrintUnformatted : PrintFormatted
 {
-    FILE *file;
-    
-    PrintUnformatted(FILE *f) : file(f) { 
-    }
-    
     template <typename T>
     PrintUnformatted& operator , (T t) {
         putc_unlocked(' ', file);
         Write(file, t, false);
         return *this;
     }
-    
-    ~PrintUnformatted() {
-        putc_unlocked('\n', file);
-    }
-    
 };
 
-struct PrintUndecided
+struct PrintUndecided : PrintUnformatted
 {
-    FILE *file;
-    const char *str;
-    bool str_present;
     
-    PrintUndecided(FILE *f, const char *s) : file(f), str(s), str_present(true) {
-        
+    void init_PrintUndecided(const char *s) {
+        this->str = s;
+        this->str_present = true;
     }
     
     template <typename T>
-    PrintFormatted operator % (T const& t)
+    PrintFormatted& operator % (T const& t)
     {
-        PrintFormatted pf(file, str);
+        PrintFormatted& pf = *this;
+        init_PrintFormatted();
         pf, t;
-        str_present = false;
-        return pf;
+        this->str_present = false;
+        return *this;
     }
     
     template <typename T>
-    PrintUnformatted operator , (T const& t)
+    PrintUnformatted& operator , (T const& t)
     {
         Write(file, str, false);
         putc_unlocked(' ', file);
         Write(file, t, false);
-        str_present = false;
-        return PrintUnformatted(file);
+        this->str_present = false;
+        return *this;
     }
     
-    ~PrintUndecided() {
-        if (str_present) {
-            Write(file, str, false);
-            putc_unlocked('\n', file);
-        }
-        
-    }
 };
 
-struct Print
-{        
-    FILE *file;
+struct Print : PrintUndecided
+{
     
-    Print(FILE *f = stdout) : file(f) { 
+    Print(FILE *f = stdout) { 
+        this->file = f;
+        this->opts = 0;
+        this->str_present = false;
         flockfile(f);
     }
     
     template <typename T>
-    PrintUnformatted operator * (T const& t) {
+    PrintUnformatted& operator * (T const& t) {
 
         Write(file, t, false);
-        return PrintUnformatted(file);
+        return *this;
     }
     
-    PrintUndecided operator * (const char *str) {
-        return PrintUndecided(file, str);
+    PrintUndecided& operator * (const char *str) {
+        init_PrintUndecided(str);
+        return *this;
     }
     
     ~Print() {
+        if ((opts & OptNone) && !(opts & OptDone)) {
+            fputs_unlocked(str-2, file);
+        } else if (str_present) {
+            Write(file, str, false);
+        }
+    
+        putc_unlocked('\n', file);
         funlockfile(file);
     }
 
