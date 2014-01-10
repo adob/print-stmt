@@ -291,14 +291,14 @@ inline void Write(FILE *file, wchar_t c, bool quoted) {
 }
 
 //TODO: fix this
-inline void Write(FILE *file, __int128 num, bool) {
+inline void Write(FILE *file, __int128_t num, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%lld", (long long)num);
     
     fwrite_unlocked(buf, 1, cnt, file);
 }
 //TODO: fix this
-inline void Write(FILE *file, unsigned __int128 num, bool) {
+inline void Write(FILE *file, __uint128_t num, bool) {
     char buf[100];
     int cnt = snprintf(buf, sizeof buf, "%llu", (unsigned long long)num);
     
