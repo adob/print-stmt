@@ -122,7 +122,7 @@ inline void Write(FILE *file, const char *str, size_t len, bool quoted) {
         fputs_unlocked("null", file);
     }
     else if (!quoted)  {
-        fputs_unlocked(str, file);
+        fwrite_unlocked(str, 1, len, file);
     }
     else {
         putc_unlocked('"', file);
