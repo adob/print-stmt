@@ -351,7 +351,7 @@ Write(FILE *file, STRING const& s, bool quoted) {
 
 
 #ifdef QSTRING_H
-void Write(FILE *file, QString const& str, bool quoted) 
+inline void Write(FILE *file, QString const& str, bool quoted) 
 {
     Write(file, str.toLocal8Bit().constData(), quoted);
 }
