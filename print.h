@@ -263,7 +263,7 @@ inline void WriteUTF8(FILE *file, uint32_t c, bool quoted) {
         *(p++) = TX | (c & MASK_X);
     } else if (c > MAX_RUNE || (SURROGATE_MIN <= c && c <= SURROGATE_MAX)) {
         p += sprintf(p, "\\x%X", c);
-    } else if (c < RUNE3_MAX) {
+    } else if (c <= RUNE3_MAX) {
         *(p++) = T3 | (c >> 12);
         *(p++) = TX | ((c >> 6) & MASK_X);
         *(p++) = TX | (c & MASK_X);
