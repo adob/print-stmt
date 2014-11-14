@@ -1,5 +1,15 @@
 #include "print.h"
 
+struct MyStruct {
+    
+} my_struct;
+
+namespace foo {
+    class Bar {
+        
+    };
+}
+
 int main() {
     const char *str = "hello";
     print str;
@@ -23,4 +33,14 @@ int main() {
     print (unsigned __int128) 1;
     print (wchar_t) 'x', (wchar_t) 233;
     print (long double) 2.3;
+    
+    int numbers[] = {1, 2, 3};
+    print "a", &my_struct;
+    print numbers;
+    
+    foo::Bar bar;
+    pretty::Print(stdout) * "p =", &bar; 
+    
+    bool b = true;
+    print b;
 }

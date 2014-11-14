@@ -5,19 +5,22 @@ An implementation of a `print` statement in C++.
 
 print expression[, expression]*
 print "format" % expression[, expression]*
-warn expression[, expression]*
-warn "format" % expression[, expression]*
+eprint expression[, expression]*
+eprint "format" % expression[, expression]*
 
 /** examples **/
 print "Hello", "world", time(0);       // Hello world 1360826578
 print "name=%q age=%s" % "Alex", 26;   // name="Alex" age=26
+
+int numbers[] = { 1, 2, 3 };
+print numbers;                         // [1, 2, 3]
 
 std::vector<std::string> things = {"apples", "oranges", "elephants"};
 print things;                          // [apples, oranges, elephants]
 
 ```
 The first form converts each expression into a string and prints it to standard output, with each expression separated by a space and a terminating newline at the end.
-**warn** is similar except it prints to standard error.
+**eprint** is similar except it prints to standard error.
 
 The second form uses a format string similar to printf().
 

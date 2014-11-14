@@ -101,7 +101,7 @@ inline void WriteCharQuoted(FILE *file, char c) {
 //         putc_unlocked(c, file);
 // }
     
-inline void Write(FILE *file, const char *str, bool quoted) {
+inline void WriteX(FILE *file, const char *str, bool quoted) {
     if (!str) {
         fputs_unlocked("null", file);
     }
@@ -134,7 +134,7 @@ inline void Write(FILE *file, const char *str, size_t len, bool quoted) {
 }
 
 inline void Write(FILE *file, char *str, bool quoted) {
-    Write(file, (const char *) str, quoted);
+    WriteX(file, (const char *) str, quoted);
 }
 
 inline void Write(FILE *file, int num, bool) {
@@ -198,6 +198,23 @@ inline void Write(FILE *file, T *p, bool) {
     int cnt = snprintf(buf, sizeof buf, "%p", p);
 #endif
     fwrite_unlocked(buf, 1, cnt, file);
+}
+
+template <typename T, size_t N>
+inline void WriteX(FILE *file, T (&arr)[N], bool quoted) {
+    putc_unlocked('[', file);
+
+    size_t i = 0;
+    if (i < N) {
+        WriteX(file, arr[i], quoted);
+        
+        while (++i < N) {
+            fputs_unlocked(", ", file);
+            WriteX(file, arr[i], quoted);
+        }
+    }
+    
+    putc_unlocked(']', file);
 }
     
 
@@ -673,7 +690,7 @@ struct PrintFormatted : PrintBase
         if (opts & OptDone)
             putc_unlocked(' ', file);
         
-        Write(file, t, quoted);
+        WriteX(file, t, quoted);
         
         if (~opts & OptDone)
             do_print();
@@ -689,7 +706,7 @@ struct PrintUnformatted : PrintFormatted
     template <typename T>
     PrintUnformatted& operator , (T t) {
         putc_unlocked(' ', file);
-        Write(file, t, false);
+        WriteX(file, t, false);
         return *this;
     }
 };
@@ -715,9 +732,9 @@ struct PrintUndecided : PrintUnformatted
     template <typename T>
     PrintUnformatted& operator , (T const& t)
     {
-        Write(file, str, false);
+        WriteX(file, str, false);
         putc_unlocked(' ', file);
-        Write(file, t, false);
+        WriteX(file, t, false);
         this->str_present = false;
         return *this;
     }
@@ -737,7 +754,7 @@ struct Print : PrintUndecided
     template <typename T>
     PrintUnformatted& operator * (T const& t) {
 
-        Write(file, t, false);
+        WriteX(file, t, false);
         return *this;
     }
     
@@ -750,7 +767,7 @@ struct Print : PrintUndecided
         if ((opts & OptNone) && !(opts & OptDone)) {
             fputs_unlocked(str-2, file);
         } else if (str_present) {
-            Write(file, str, false);
+            WriteX(file, str, false);
         }
     
         putc_unlocked('\n', file);
@@ -761,7 +778,7 @@ struct Print : PrintUndecided
 }
 
 #ifndef PRETTYPRINT_NO_KEYWORD
-#define print (::pretty::Print(stdout))*
-#define warn  (::pretty::Print(stderr))*
+#define print  (::pretty::Print(stdout))*
+#define eprint (::pretty::Print(stderr))*
 #endif
 

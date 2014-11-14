@@ -196,6 +196,20 @@ int main() {
         TEST("é\n");
     }
     
+    {
+        clear_file();
+        bool b = true;
+        pretty::Print(file) * b;
+        TEST("true\n");
+    }
+    
+    {
+        clear_file();
+        int numbers[] = { 1, 2, 3 };
+        pretty::Print(file) * numbers;
+        TEST("[1, 2, 3]\n");
+    }
+    
 
     more_tests();
 }
