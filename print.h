@@ -100,8 +100,25 @@ inline void WriteCharQuoted(FILE *file, char c) {
 //     else
 //         putc_unlocked(c, file);
 // }
+
+template <typename T>
+inline void WriteArray(FILE *file, T const& arr, size_t N, bool quoted) {
+    putc_unlocked('[', file);
     
-inline void WriteX(FILE *file, const char *str, bool quoted) {
+    size_t i = 0;
+    if (i < N) {
+        WriteX(file, arr[i], quoted);
+        
+        while (++i < N) {
+            fputs_unlocked(", ", file);
+            WriteX(file, arr[i], quoted);
+        }
+    }
+    
+    putc_unlocked(']', file);
+}
+
+inline void Write(FILE *file, const char *str, bool quoted) {
     if (!str) {
         fputs_unlocked("null", file);
     }
@@ -130,6 +147,15 @@ inline void Write(FILE *file, const char *str, size_t len, bool quoted) {
             WriteCharQuoted(file, *str++);
         }
         putc_unlocked('"', file);
+    }
+}
+
+template <size_t N>
+inline void WriteX(FILE *file, const char (&arr)[N], bool quoted) {
+    if (arr[N-1] == '\0') {
+        Write(file, arr, N-1, quoted);
+    } else {
+        WriteArray(file, arr, N, quoted);
     }
 }
 
@@ -202,19 +228,7 @@ inline void Write(FILE *file, T *p, bool) {
 
 template <typename T, size_t N>
 inline void WriteX(FILE *file, T (&arr)[N], bool quoted) {
-    putc_unlocked('[', file);
-
-    size_t i = 0;
-    if (i < N) {
-        WriteX(file, arr[i], quoted);
-        
-        while (++i < N) {
-            fputs_unlocked(", ", file);
-            WriteX(file, arr[i], quoted);
-        }
-    }
-    
-    putc_unlocked(']', file);
+    WriteArray(file, arr, N, quoted);
 }
     
 
@@ -758,8 +772,14 @@ struct Print : PrintUndecided
         return *this;
     }
     
-    PrintUndecided& operator * (const char *str) {
-        init_PrintUndecided(str);
+    template <size_t N>
+    PrintUndecided& operator * (const char (&str)[N]) {
+        if (str[N-1] == '\0') {
+            init_PrintUndecided(str);
+        } else {
+            WriteX(file, str, false);
+        }
+        
         return *this;
     }
     

@@ -43,4 +43,12 @@ int main() {
     
     bool b = true;
     print b;
+    
+    char letters[] = { 'a', 'b', 'c', 'd' };
+    print "1", "2", "3", letters;
+    print letters;
+    print letters, letters;
+    print "hello", "one";
+    const char letters2[] = { 'x', 'y', 'z' };
+    print letters2;
 }
