@@ -704,7 +704,7 @@ struct PrintFormatted : PrintBase
 struct PrintUnformatted : PrintFormatted
 {
     template <typename T>
-    PrintUnformatted& operator , (T t) {
+    PrintUnformatted& operator , (T const& t) {
         putc_unlocked(' ', file);
         WriteX(file, t, false);
         return *this;

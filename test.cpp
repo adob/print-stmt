@@ -210,6 +210,14 @@ int main() {
         TEST("[1, 2, 3]\n");
     }
     
+    {
+        clear_file();
+        int numbers1[] = { 1, 2, 3 };
+        int numbers2[] = { 3, 4, 5 };
+        pretty::Print(file) * numbers1, numbers2;
+        TEST("[1, 2, 3] [3, 4, 5]\n");
+    }
+    
 
     more_tests();
 }
