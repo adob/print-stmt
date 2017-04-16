@@ -1,7 +1,7 @@
 An implementation of a `print` statement in C++.
 
 ```C++
-#include "print.h"
+# include "print.h"
 
 print expression[, expression]*
 print "format" % expression[, expression]*
@@ -47,7 +47,7 @@ Expressions are converted to strings according to their type, as follows:
 The easiest way to use this is to clone this repo and copy the file `print.h` into your project.
 Then simply
 ```C++
-#include "print.h"` 
+# include "print.h"` 
 ```
 at the top of the file, but after the system `#includes`s.
 
