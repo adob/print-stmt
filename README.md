@@ -51,7 +51,7 @@ Then simply
 ```
 at the top of the file, but after the system `#includes`s.
 
-#### Misc####
+#### Misc ####
 `print` is thread and exception safe.
 The output stream is locked once before anything is printed and then unlocked at the end inside a destructor. This ensures that the whole line will be printed without being interleaved with output from another thread.
 
