@@ -64,5 +64,4 @@ int main() {
     
     long long int x = 3;
     pretty::Print(stdout) * x;
-    
 }

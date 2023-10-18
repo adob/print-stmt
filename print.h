@@ -645,6 +645,7 @@ void Write(FILE *file, T const& t, ...) {
     free(demangled);
 #else
     fputs_unlocked("<?>", file);
+    (void)t;  // silence unsued parameter warning
 #endif
 }
 
